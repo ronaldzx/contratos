@@ -1,0 +1,13 @@
+apiPath: "/finance/contracts/api/v1/*"
+
+autodiscoveryID : "16901757"
+
+listenerAPI:
+  port: "8082"
+
+listenerHealth:
+  port: "8083"
+  
+mainDocument: "Contrato Comercial"
+  
+LOG_LEVEL: "ERROR"

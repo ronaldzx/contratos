@@ -1,0 +1,351 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd  http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+    <http:listener-config name="contracts-httpListenerConfig">
+        <http:listener-connection host="0.0.0.0" port="${listenerAPI.port}" />
+    </http:listener-config>
+    <apikit:config name="contracts-config" api="resource::2332bd66-03f6-49a8-bb2d-452c4ef8ad43:contracts:2.0.0:oas:zip:contracts.json" outboundHeadersMapName="outboundHeaders" httpStatusVarName="httpStatus" />
+    <http:request-config name="HTTP_Request_Local" doc:name="HTTP Request configuration" doc:id="fbf75d0c-d33d-4e4c-b784-7c7cdbfea2a2" basePath="/finance/contracts-sap/api/v1/">
+        <http:request-connection host="localhost" port="8080" />
+    </http:request-config>
+    <http:request-config name="HTTP_Request_GetContract_Local" doc:name="HTTP Request configuration" doc:id="17046870-8180-486e-96cb-937840fd1d84" basePath="/finance/contracts-sap/api/v1/">
+        <http:request-connection host="localhost" port="8080" />
+    </http:request-config>
+    <http:request-config name="HTTP_Request_GetDocument" doc:name="HTTP Request configuration" doc:id="368fa5ab-c25a-46ba-bcce-d97cb54a4a51" basePath="/finance/contracts-sap/api/v1/">
+        <http:request-connection host="localhost" port="8080" />
+    </http:request-config>
+    <flow name="contracts-main">
+        <http:listener config-ref="contracts-httpListenerConfig" path="${apiPath}">
+            <http:response statusCode="#[vars.httpStatus default 200]">
+                <http:headers><![CDATA[#[vars.outboundHeaders default {}]]]></http:headers>
+            </http:response>
+            <http:error-response statusCode="#[vars.httpStatus default 500]">
+                <http:body><![CDATA[#[payload]]]></http:body>
+                <http:headers><![CDATA[#[vars.outboundHeaders default {}]]]></http:headers>
+            </http:error-response>
+        </http:listener>
+        <apikit:router config-ref="contracts-config" />
+        <error-handler>
+            <on-error-propagate type="APIKIT:BAD_REQUEST">
+                <ee:transform xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Bad request"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">400</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:NOT_FOUND">
+                <ee:transform xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Resource not found"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">404</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:METHOD_NOT_ALLOWED">
+                <ee:transform xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Method not allowed"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">405</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:NOT_ACCEPTABLE">
+                <ee:transform xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Not acceptable"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">406</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:UNSUPPORTED_MEDIA_TYPE">
+                <ee:transform xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Unsupported media type"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">415</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:NOT_IMPLEMENTED">
+                <ee:transform xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Not Implemented"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">501</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+        </error-handler>
+    </flow>
+    <flow name="contracts-console">
+        <http:listener config-ref="contracts-httpListenerConfig" path="/console/*">
+            <http:response statusCode="#[vars.httpStatus default 200]">
+                <http:headers>#[vars.outboundHeaders default {}]</http:headers>
+            </http:response>
+            <http:error-response statusCode="#[vars.httpStatus default 500]">
+                <http:body>#[payload]</http:body>
+                <http:headers>#[vars.outboundHeaders default {}]</http:headers>
+            </http:error-response>
+        </http:listener>
+        <apikit:console config-ref="contracts-config" />
+        <error-handler>
+            <on-error-propagate type="APIKIT:NOT_FOUND">
+                <ee:transform xsi:schemaLocation=" http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Resource not found"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">404</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+        </error-handler>
+    </flow>
+    <flow name="post:\contracts\search:application\json:contracts-config">
+        <logger level="INFO" message="post:\contracts\search:application\json:contracts-config" />
+        <set-variable value="#[attributes.headers.authorization]" doc:name="Set AuthHeader" doc:id="7c88c9b1-52ca-47ed-b2b3-1f4187c34559" variableName="authorization" />
+        <http:request method="POST" doc:name="Request" doc:id="f5398f37-53f2-4e74-821e-d094e40a01d2" config-ref="HTTP_Request_Local" path="/contracts/search">
+            <http:headers><![CDATA[#[%dw 2.0 
+output application/java
+---
+{
+	(Authorization : vars.authorization) if (vars.authorization != null)
+}]]]></http:headers>
+        </http:request>
+		<set-variable value="#[%dw 2.0  output application/java&#10;---&#10;[] as Array]" doc:name="Declare Contratos Array" doc:id="376c6673-03f3-486a-8dad-23e41379a1da" variableName="contractsList"/>
+		<ee:transform doc:name="Transform Message" doc:id="e9c89dcc-5a41-4fa5-a16b-0b92ba1cc537" >
+			<ee:message >
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="pagination" ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"totalItems":payload.pagination.totalItems,
+	"totalPages":payload.pagination.totalPages
+}]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<set-variable value="#[false]" doc:name="Set Error" doc:id="3a1dc6f8-022a-49a9-a7d5-9ffbcbfbf66e" variableName="isError"/>
+		<set-variable value="#[false]" doc:name="Set Duplicado" doc:id="a2c257bc-af4f-4e53-8c25-6a82b4aa29d5" variableName="errorDuplicado" />
+		<set-variable value="#[false]" doc:name="Set Existe" doc:id="81b8b34e-154a-46fc-a91c-29e54ebb2b30" variableName="existeMainDocument" />
+		<foreach doc:name="For Each" doc:id="e776571b-e2b3-43d6-86d5-0dcac13aea71" collection="#[payload.contracts]">
+			<logger level="INFO" doc:name="Logger" doc:id="ec5aa905-3c14-4614-b679-0e8647ebc85d" />
+			<set-variable value="#[payload.code]" doc:name="Set Code" doc:id="2f138a6b-7627-4565-8ada-1b10ec774d25" variableName="code" />
+			<set-variable value="#[payload.status]" doc:name="Set Status" doc:id="da75dd43-088f-445b-a720-1e39dc7d6784" variableName="status" />
+			<set-variable value="#[%dw 2.0  output application/java&#10;---&#10;[] as Array]" doc:name="Declare Documentos Array" doc:id="fcc7d705-6c1b-40df-8d17-7af7d9f14005" variableName="documentsList" />
+			<foreach doc:name="For Each" doc:id="1ff6b7a5-9d73-47d7-b883-9358d2a24f8c" collection="#[payload.documents]">
+				<choice doc:name="Choice" doc:id="4147174d-ddb3-4a3e-af89-e9899c9c277a">
+				<when expression="#[payload.&quot;type&quot; == p('mainDocument')]">
+					<choice doc:name="Choice" doc:id="23fb57e6-9ea4-4d26-9bdd-5dc01f215cce">
+							<when expression="#[vars.existeMainDocument == true]">
+								<set-variable value="#[true]" doc:name="Set Duplicado True" doc:id="03133d1c-a75c-4274-81b6-db5befab5f1b" variableName="errorDuplicado"/>
+								<ee:transform doc:name="Transform Message" doc:id="b903199e-55d0-45fa-ab93-617c1ac590d5">
+									<ee:message>
+									</ee:message>
+									<ee:variables>
+										<ee:set-variable variableName="errorDescripcion"><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"error":"Existen dos main documents"
+}]]></ee:set-variable>
+									</ee:variables>
+								</ee:transform>
+							</when>
+							<otherwise >
+								<ee:transform doc:name="Transform Message" doc:id="e78d1e14-c847-4f1d-8961-c779ab0e29b1">
+				<ee:message>
+				</ee:message>
+							<ee:variables>
+								<ee:set-variable variableName="mainDocument"><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"fileName": payload.fileName,
+	"id": payload.id,
+	"size": payload.size,
+	"type": payload."type",
+	"signDate": payload.signDate,
+	"effectiveDate": payload.effectiveDate,
+	"fileType": payload.fileType
+}]]></ee:set-variable>
+							</ee:variables>
+			</ee:transform>
+								<set-variable value="#[true]" doc:name="Set Existe True" doc:id="317a67ab-4290-4d70-857f-8e84065e96f1" variableName="existeMainDocument" />
+							</otherwise>
+						</choice>
+				</when>
+					<otherwise>
+						<set-variable value="#[output application/json&#10;---&#10;flatten(vars.*documentsList ++ [payload])]" doc:name="Set Documentos Array" doc:id="7a0f9950-7f4b-4cb9-9707-4778e45ea948" variableName="documentsList" />
+				</otherwise>
+			</choice>
+			</foreach>
+			<choice doc:name="Choice" doc:id="27ca296e-9c76-469e-8697-c58135f0dd95" >
+				<when expression="#[vars.errorDuplicado == true]">
+					<set-variable value="#[true]" doc:name="Set Error" doc:id="ff099874-1360-460a-b154-6680d287969c" variableName="isError"/>
+				</when>
+				<when expression="#[vars.existeMainDocument == false]">
+					<set-variable value="#[true]" doc:name="Set Error" doc:id="21c91e20-d058-4180-a7db-54a0d0925ec1" variableName="isError"/>
+				</when>
+				<otherwise >
+					<ee:transform doc:name="Transform Message" doc:id="b5334a00-107e-46b5-9d65-9f334f31f24e">
+				<ee:message>
+					<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"code":vars.code,
+	"status":vars.status,
+	"mainDocument":vars.mainDocument,
+	"documents":[
+		vars.documentsList
+	]
+}]]></ee:set-payload>
+				</ee:message>
+			</ee:transform>
+					<set-variable value="#[output application/json&#10;---&#10;flatten(vars.*contractsList ++ [payload])]" doc:name="Set Contratos" doc:id="1357501a-f77e-45b1-a907-9e9915f9412c" variableName="contractsList" />
+					<set-variable value="#[false]" doc:name="Set Existe False" doc:id="f7cd2504-445a-4c4e-a471-dbb9ec3832e5" variableName="existeMainDocument" />
+				</otherwise>
+			</choice>
+		</foreach>
+        <choice doc:name="Choice" doc:id="315434a4-8365-465f-9a5f-092d3c89282e" >
+			<when expression="#[vars.isError == true]">
+				<ee:transform doc:name="Transform Message" doc:id="97097b60-a978-4da6-9745-390c45d6f45e" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"error":"Error: Existe duplicado o no existe documento main"
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</when>
+			<otherwise >
+				<ee:transform doc:name="Transform Message" doc:id="8142ae86-d5d1-4d25-a36e-9ea8af18e130">
+            <ee:message>
+                <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"contracts":[
+		vars.contractsList
+	],
+	"pagination":vars.pagination
+}]]></ee:set-payload>
+            </ee:message>
+        </ee:transform>
+			</otherwise>
+		</choice>
+		<error-handler>
+            <on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="87ada4d7-e09b-423a-bcec-be806b210506">
+                <logger level="INFO" doc:name="Logger" doc:id="459529b3-59af-4eff-911a-6b6ea26cae8b" message="#[error]" />
+                <ee:transform doc:name="Transform Message" doc:id="a3f0c10a-883c-408c-8ff6-50474c673c15">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+error.errorMessage.payload]]></ee:set-payload>
+                    </ee:message>
+                </ee:transform>
+                <set-variable value="#[message.attributes.statusCode]" doc:name="Set Variable" doc:id="1b76884c-97a5-4288-8789-47017aff6cb4" variableName="httpStatus" />
+            </on-error-propagate>
+        </error-handler>
+    </flow>
+    <flow name="get:\contracts\(contractCode)\content:contracts-config">
+        <set-variable value="#[attributes.uriParams.contractCode]" doc:name="Set Variable" doc:id="1e04957f-4f02-4bfb-8c5d-dbb9a8c61f5f" variableName="contractCode" />
+        <http:request method="GET" doc:name="Request" doc:id="a314de3c-5719-4e02-906c-ca8a237418f1" config-ref="HTTP_Request_GetContract_Local" path="/contracts/{contractCode}/content">
+            <http:uri-params><![CDATA[#[output application/java
+---
+{
+	"contractCode" : vars.contractCode
+}]]]></http:uri-params>
+        </http:request>
+        <ee:transform doc:name="Transform Message" doc:id="b18e32a7-1238-4d70-8f59-10d04a909370">
+            <ee:message>
+                <ee:set-payload><![CDATA[payload]]></ee:set-payload>
+            </ee:message>
+        </ee:transform>
+        <logger level="INFO" message="get:\contracts\(contractCode)\content:contracts-config" />
+        <error-handler>
+            <on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="316169d3-9742-448f-8c95-0d9ffb133412">
+                <logger level="INFO" doc:name="Logger" doc:id="25d744c5-0c8b-4574-bdb0-a25fb8296175" />
+                <ee:transform doc:name="Transform Message" doc:id="de7f78bb-9923-45a7-b9d0-b33a24688482">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+error.errorMessage.payload]]></ee:set-payload>
+                    </ee:message>
+                </ee:transform>
+                <set-variable value="#[message.attributes.statusCode]" doc:name="Set Variable" doc:id="ab73dba3-c893-4b93-ab39-f431b2217e5e" variableName="httpStatus" />
+            </on-error-propagate>
+        </error-handler>
+    </flow>
+    <flow name="get:\contracts\(contractCode)\documents\(documentCode)\content:contracts-config">
+        <logger level="INFO" doc:name="Logger" doc:id="c44dc7f7-1b74-4463-9339-21c64f5b1d60" />
+        <set-variable value="#[attributes.uriParams.contractCode]" doc:name="Set_ContractCode" doc:id="433dfa8c-f29d-47a7-9a3f-a272afe1d388" variableName="contractCode" />
+        <set-variable value="#[attributes.uriParams.documentCode]" doc:name="Set_DocumentCode" doc:id="31d7831e-c675-46c7-a2ad-c79c2197e412" variableName="documentCode" />
+        <http:request method="GET" doc:name="Request" doc:id="9337966f-4b83-49ea-91dc-a4b1157ecacb" config-ref="HTTP_Request_GetDocument" path="/contracts/{contractCode}/documents/{documentCode}/content">
+            <http:uri-params><![CDATA[#[output application/java
+---
+{
+	"documentCode" : vars.documentCode,
+	"contractCode" : vars.contractCode
+}]]]></http:uri-params>
+        </http:request>
+        <ee:transform>
+            <ee:variables>
+                <ee:set-variable variableName="contractCode"><![CDATA[attributes.uriParams.'contractCode']]></ee:set-variable>
+                <ee:set-variable variableName="documentCode"><![CDATA[payload]]></ee:set-variable>
+            </ee:variables>
+        </ee:transform>
+        <logger level="INFO" message="get:\contracts\(contractCode)\documents\(documentCode)\content:contracts-config" />
+        <error-handler>
+            <on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="407b5fee-c248-49c2-8c4f-6e12c410216a">
+                <logger level="INFO" doc:name="Logger" doc:id="f5c8a241-72e0-439d-a41c-b2c9a4f50a3b" />
+                <ee:transform doc:name="Transform Message" doc:id="49113a17-3353-465e-b497-8ad711f27050">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+error.errorMessage.payload]]></ee:set-payload>
+                    </ee:message>
+                </ee:transform>
+                <set-variable value="#[message.attributes.statusCode]" doc:name="Set Variable" doc:id="ae996486-893a-41af-837c-7c5be101a1aa" variableName="httpStatus" />
+            </on-error-propagate>
+        </error-handler>
+    </flow>
+</mule>

@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>2332bd66-03f6-49a8-bb2d-452c4ef8ad43</groupId>
+  <artifactId>contracts</artifactId>
+  <version>2.0.0</version>
+  <name>contracts</name>
+  <properties>
+    <classifier>oas</classifier>
+    <main>contracts.json</main>
+    <originalFormatVersion>2.0</originalFormatVersion>
+    <apiVersion>1.2.0</apiVersion>
+    <projectId>9711b514-90f8-43bc-bf5b-14a5cf36ee81</projectId>
+    <branchId>master</branchId>
+    <commitId>6624d93c09fea2cbc2e0bf7b836e9cdaacdd668e</commitId>
+    <type>rest-api</type>
+    <mainFile>contracts.json</mainFile>
+  </properties>
+  <repositories>
+    <repository>
+      <id>anypoint-exchange</id>
+      <url>https://maven.anypoint.mulesoft.com/api/v3/maven</url>
+    </repository>
+  </repositories>
+</project>
